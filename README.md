@@ -28,14 +28,23 @@ El sistema se conecta a una base de datos PostgreSQL en la nube mediante Supabas
 - **Driver:** org.postgresql.Driver  
 - **Modo SSL:** Requerido (?sslmode=require)
 
-Variables de Entorno
-Para evitar la exposición de credenciales en el código fuente, el sistema utiliza las siguientes variables:
-1. DB_URL: URL de conexión JDBC.
-2. DB_USER: Identificador del proyecto de Supabase.
-3. DB_PASSWORD: Contraseña de la base de datos.
+## Variables de Entorno
 
-Lógica de Negocio
-Se han implementado las siguientes reglas:
-1. El acceso a la gestión de usuarios está restringido exclusivamente a roles de Administrador mediante el método validarPermisosAdmin().
-2. El rol Administrador accede solamente al sistema de Gestión de Usuarios que permite la creación, visualización y eliminación de usuarios; también puede generar reportes en PDF individuales o en su totalidad de usuarios.
-3. El rol de Analista accede directamente al sistema de Gestión de Licencias.
+Para evitar la exposición de credenciales sensibles en el código fuente, el sistema utiliza las siguientes variables de entorno:
+
+- **DB_URL:** URL de conexión JDBC a la base de datos.
+- **DB_USER:** Identificador del proyecto o usuario de Supabase.
+- **DB_PASSWORD:** Contraseña de la base de datos.
+
+## Lógica de Negocio
+
+El sistema implementa las siguientes reglas de negocio:
+
+- El acceso a la gestión de usuarios está restringido exclusivamente a usuarios con rol **Administrador**, validado mediante el método `validarPermisosAdmin()`.
+
+- El rol **Administrador** tiene acceso únicamente al sistema de Gestión de Usuarios, el cual permite:
+  - Crear, visualizar y eliminar usuarios.
+  - Generar reportes en PDF, tanto individuales como generales.
+
+- El rol **Analista** accede directamente al sistema de Gestión de Licencias.
+
