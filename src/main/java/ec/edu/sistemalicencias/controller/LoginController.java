@@ -38,7 +38,7 @@ public class LoginController {
 
                 String rol = userLogueado.getRol().trim();
 
-                // 3. Ejecutar el cambio de ventana en el hilo de interfaz de usuario (EDT)
+                // 3. Ejecutar el cambio de ventana en el hilo de interfaz de usuario
                 SwingUtilities.invokeLater(() -> {
                     vistaLogin.dispose(); // Cerrar Login
 

@@ -38,7 +38,7 @@ public class UsuarioController {
         try {
             Usuario nuevo = new Usuario();
             nuevo.setUsuario(usuario);
-            nuevo.setClave(clave); // En un sistema real, aquí se debería encriptar
+            nuevo.setClave(clave);
             nuevo.setNombreCompleto(nombre);
             nuevo.setCedula(cedula);
             nuevo.setEmail(email);
@@ -87,7 +87,7 @@ public class UsuarioController {
             // Buscamos el usuario específico
             Usuario u = usuarioDAO.buscarPorId(id);
             if (u != null) {
-                // PDFGenerator suele recibir una lista, así que creamos una con un solo elemento
+                //Lista para PDFGenerator con un solo elemento
                 List<Usuario> listaIndividual = Collections.singletonList(u);
                 String nombreArchivo = "Reporte_Usuario_" + u.getCedula() + ".pdf";
 

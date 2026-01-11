@@ -12,7 +12,6 @@ public class UsuarioDAO {
 
     /**
      * Realiza la autenticación del usuario en la base de datos.
-     * Esencial para que el LoginView funcione.
      */
     public Usuario login(String usuario, String clave) throws BaseDatosException {
         String sql = "SELECT * FROM usuarios WHERE usuario = ? AND clave = ?";
@@ -118,7 +117,7 @@ public class UsuarioDAO {
             stmt.setLong(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new BaseDatosException("No se puede eliminar el usuario. Es posible que tenga registros asociados.", e);
+            throw new BaseDatosException("No se puede eliminar el usuario.", e);
         }
     }
 
@@ -139,7 +138,6 @@ public class UsuarioDAO {
         if (ts != null) {
             u.setFechaCreacion(ts.toLocalDateTime());
         }
-
         return u;
     }
 }

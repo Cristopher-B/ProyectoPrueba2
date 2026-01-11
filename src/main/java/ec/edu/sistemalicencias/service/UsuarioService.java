@@ -43,7 +43,7 @@ public class UsuarioService {
         }
 
         nuevoUsuario.setRol(RolConstantes.ANALISTA);
-        // En Supabase, el ID es SERIAL, no lo enviamos
+        //En Supabase, el ID es SERIAL, no lo enviamos
         usuarioDAO.insertar(nuevoUsuario);
     }
 
@@ -69,7 +69,6 @@ public class UsuarioService {
      */
     public List<Usuario> obtenerTodosLosAnalistas() throws BaseDatosException {
         validarPermisosAdmin();
-        // Pasamos null para que el DAO ignore el filtro de fechas
         return usuarioDAO.listarPorFechas(null, null);
     }
 
@@ -90,11 +89,9 @@ public class UsuarioService {
         if (usuarioActual == null ||
                 usuarioActual.getRol() == null ||
                 !usuarioActual.getRol().equalsIgnoreCase(RolConstantes.ADMIN)) {
-
             throw new SecurityException("Acceso Denegado: Se requieren privilegios de Administrador.");
         }
     }
-
     public void cerrarSesion() {
         SesionUsuario.getInstancia().cerrarSesion();
     }

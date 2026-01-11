@@ -33,7 +33,7 @@ public class Usuario implements Validable {
         if (clave == null || clave.trim().isEmpty()) throw new DocumentoInvalidoException("La clave es obligatoria.");
         if (rol == null || rol.trim().isEmpty()) throw new DocumentoInvalidoException("El rol es obligatorio.");
         if (nombreCompleto == null || nombreCompleto.trim().isEmpty()) throw new DocumentoInvalidoException("El nombre es obligatorio.");
-        // Validación de cédula ecuatoriana básica
+        // Validación de cédula ecuatoriana
         if (cedula == null || cedula.trim().length() != 10) throw new DocumentoInvalidoException("La cédula debe tener 10 dígitos.");
         return true;
     }
@@ -66,7 +66,6 @@ public class Usuario implements Validable {
     public LocalDateTime getFechaCreacion() {
         return (fechaCreacion == null) ? LocalDateTime.now() : fechaCreacion;
     }
-
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
