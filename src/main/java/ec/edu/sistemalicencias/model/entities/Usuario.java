@@ -12,7 +12,8 @@ public class Usuario implements Validable {
     private String nombreCompleto;
     private String cedula;
     private String email;
-    private LocalDateTime fechaCreacion;
+    // Se inicializa para evitar NullPointerException en el PDF si el DAO no lo llena
+    private LocalDateTime fechaCreacion = LocalDateTime.now();
 
     public Usuario() {}
 
@@ -23,6 +24,7 @@ public class Usuario implements Validable {
         this.nombreCompleto = nombreCompleto;
         this.cedula = cedula;
         this.email = email;
+        this.fechaCreacion = LocalDateTime.now();
     }
 
     @Override
@@ -31,7 +33,8 @@ public class Usuario implements Validable {
         if (clave == null || clave.trim().isEmpty()) throw new DocumentoInvalidoException("La clave es obligatoria.");
         if (rol == null || rol.trim().isEmpty()) throw new DocumentoInvalidoException("El rol es obligatorio.");
         if (nombreCompleto == null || nombreCompleto.trim().isEmpty()) throw new DocumentoInvalidoException("El nombre es obligatorio.");
-        if (cedula == null || cedula.length() != 10) throw new DocumentoInvalidoException("La cédula debe tener 10 dígitos.");
+        // Validación de cédula ecuatoriana básica
+        if (cedula == null || cedula.trim().length() != 10) throw new DocumentoInvalidoException("La cédula debe tener 10 dígitos.");
         return true;
     }
 
@@ -55,6 +58,16 @@ public class Usuario implements Validable {
     public void setCedula(String cedula) { this.cedula = cedula; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
+    /**
+     * Devuelve la fecha de creación.
+     * Se agrega una validación extra para que nunca retorne null al PDF.
+     */
+    public LocalDateTime getFechaCreacion() {
+        return (fechaCreacion == null) ? LocalDateTime.now() : fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
 }

@@ -1,92 +1,101 @@
 package ec.edu.sistemalicencias.controller;
 
+import ec.edu.sistemalicencias.dao.UsuarioDAO;
 import ec.edu.sistemalicencias.model.entities.Usuario;
-import ec.edu.sistemalicencias.service.UsuarioService;
+import ec.edu.sistemalicencias.model.exceptions.BaseDatosException;
 import ec.edu.sistemalicencias.util.PDFGenerator;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.io.File;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class UsuarioController {
-
-    private final UsuarioService service;
+    private final UsuarioDAO usuarioDAO;
 
     public UsuarioController() {
-        this.service = new UsuarioService();
+        this.usuarioDAO = new UsuarioDAO();
     }
 
     /**
-     * Crea un nuevo analista validando los campos básicos antes de enviar al servicio.
+     * Obtiene todos los analistas registrados para llenar la tabla de la vista.
      */
-    public void crearAnalista(String user, String pass, String nombre, String cedula, String email) {
+    public List<Usuario> obtenerTodosAnalistas() {
         try {
-            // Instancia con el constructor completo (Asegúrate que tu entidad Usuario lo tenga)
-            Usuario u = new Usuario();
-            u.setUsuario(user);
-            u.setClave(pass);
-            u.setNombreCompleto(nombre);
-            u.setCedula(cedula);
-            u.setEmail(email);
-
-            service.registrarAnalista(u);
-
-            JOptionPane.showMessageDialog(null, "Analista '" + nombre + "' registrado exitosamente.",
-                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "No se pudo registrar: " + e.getMessage(),
-                    "Error de Registro", JOptionPane.ERROR_MESSAGE);
+            // Pasamos null en las fechas para que el DAO traiga todos los registros
+            return usuarioDAO.listarPorFechas(null, null);
+        } catch (BaseDatosException e) {
+            JOptionPane.showMessageDialog(null, "Error al cargar analistas: " + e.getMessage());
+            return new ArrayList<>();
         }
     }
 
     /**
-     * Gestiona la obtención de datos y la apertura del cuadro de diálogo para guardar el PDF.
+     * Crea un nuevo analista en la base de datos de Supabase.
+     */
+    public void crearAnalista(String usuario, String clave, String nombre, String cedula, String email) {
+        try {
+            Usuario nuevo = new Usuario();
+            nuevo.setUsuario(usuario);
+            nuevo.setClave(clave); // En un sistema real, aquí se debería encriptar
+            nuevo.setNombreCompleto(nombre);
+            nuevo.setCedula(cedula);
+            nuevo.setEmail(email);
+            nuevo.setRol("ANALISTA");
+
+            usuarioDAO.insertar(nuevo);
+        } catch (BaseDatosException e) {
+            throw new RuntimeException("Error al guardar: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Elimina un usuario por su ID.
+     */
+    public boolean eliminarUsuario(Long id) {
+        try {
+            return usuarioDAO.eliminar(id);
+        } catch (BaseDatosException e) {
+            JOptionPane.showMessageDialog(null, "No se pudo eliminar: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Genera el reporte PDF total (cuando no hay selección).
      */
     public void generarReportePDF(LocalDate inicio, LocalDate fin) {
         try {
-            // 1. Obtener datos del servicio
-            List<Usuario> lista = service.obtenerReporteAnalistas(inicio, fin);
-
-            if (lista == null || lista.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "No se encontraron registros en el rango de fechas seleccionado.",
-                        "Sin Datos", JOptionPane.WARNING_MESSAGE);
+            List<Usuario> lista = usuarioDAO.listarPorFechas(inicio, fin);
+            if (lista.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "No hay datos para el reporte.");
                 return;
             }
-
-            // 2. Configurar el selector de archivos
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Guardar Reporte de Usuarios");
-            fileChooser.setFileFilter(new FileNameExtensionFilter("Documentos PDF (*.pdf)", "pdf"));
-
-            // Sugerir nombre de archivo con la fecha actual
-            String nombreSugerido = "Reporte_Analistas_" + LocalDate.now() + ".pdf";
-            fileChooser.setSelectedFile(new File(nombreSugerido));
-
-            if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-                File archivoDestino = fileChooser.getSelectedFile();
-                String ruta = archivoDestino.getAbsolutePath();
-
-                // Asegurar extensión .pdf
-                if (!ruta.toLowerCase().endsWith(".pdf")) {
-                    ruta += ".pdf";
-                }
-
-                // 3. Generación física del PDF
-                PDFGenerator.generarReporteUsuarios(lista, ruta);
-
-                JOptionPane.showMessageDialog(null, "El reporte ha sido exportado a:\n" + ruta,
-                        "Reporte Generado", JOptionPane.INFORMATION_MESSAGE);
-            }
-
-        } catch (SecurityException se) {
-            JOptionPane.showMessageDialog(null, se.getMessage(), "Permiso Denegado", JOptionPane.ERROR_MESSAGE);
+            PDFGenerator.generarReporteUsuarios(lista, "Reporte_General_Usuarios.pdf");
+            JOptionPane.showMessageDialog(null, "Reporte general generado con éxito.");
         } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Error inesperado al generar el PDF: " + e.getMessage(),
-                    "Error de Exportación", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Error al generar PDF: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Genera un reporte PDF de un único usuario seleccionado en la tabla.
+     */
+    public void generarReporteIndividual(Long id) {
+        try {
+            // Buscamos el usuario específico
+            Usuario u = usuarioDAO.buscarPorId(id);
+            if (u != null) {
+                // PDFGenerator suele recibir una lista, así que creamos una con un solo elemento
+                List<Usuario> listaIndividual = Collections.singletonList(u);
+                String nombreArchivo = "Reporte_Usuario_" + u.getCedula() + ".pdf";
+
+                PDFGenerator.generarReporteUsuarios(listaIndividual, nombreArchivo);
+                JOptionPane.showMessageDialog(null, "Reporte individual generado: " + nombreArchivo);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error al generar reporte individual: " + e.getMessage());
         }
     }
 }
