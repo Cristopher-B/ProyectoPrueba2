@@ -1,50 +1,44 @@
 package ec.edu.sistemalicencias.config;
 
 import ec.edu.sistemalicencias.model.exceptions.BaseDatosException;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-/**
- * Clase de configuración para la conexión a la base de datos PostgreSQL (Supabase).
- * Implementa el patrón Singleton para gestionar una única instancia de configuración.
- */
 public class DatabaseConfig {
 
-    // Instancia única (Singleton)
     private static DatabaseConfig instancia;
 
-    // Parámetros de conexión
     private final String url;
     private final String usuario;
     private final String password;
     private final String driver;
 
-    /**
-     * Constructor privado para implementar Singleton
-     */
     private DatabaseConfig() {
-        // 1. CAMBIO: Inicializar el driver explícitamente antes de usarlo
         this.driver = "org.postgresql.Driver";
 
-        // 2. PARÁMETROS: Usando tus credenciales de Supabase
-        this.url = "jdbc:postgresql://aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require";
-        this.usuario = "postgres.jpcjuctexasnykagmxfp";
-        this.password = "*VB2QR#Y+t$u/F3";
+        this.url = obtenerVariable("DB_URL", "jdbc:postgresql://aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require");
+        this.usuario = obtenerVariable("DB_USER", "postgres.jpcjuctexasnykagmxfp");
+        this.password = obtenerVariable("DB_PASSWORD", "*VB2QR#Y+t$u/F3");
 
         try {
-            // Cargar el driver JDBC de PostgreSQL
             Class.forName(this.driver);
         } catch (ClassNotFoundException e) {
-            // CAMBIO: Mensaje corregido a PostgreSQL
             System.err.println("Error al cargar el driver PostgreSQL: " + e.getMessage());
         }
     }
 
     /**
-     * Obtiene la instancia única de DatabaseConfig (Singleton)
+     * Método auxiliar para leer variables de entorno de forma segura
      */
+    private String obtenerVariable(String nombre, String valorPorDefecto) {
+        String valor = System.getenv(nombre);
+        if (valor == null || valor.trim().isEmpty()) {
+            return valorPorDefecto;
+        }
+        return valor;
+    }
+
     public static synchronized DatabaseConfig getInstance() {
         if (instancia == null) {
             instancia = new DatabaseConfig();
@@ -52,19 +46,14 @@ public class DatabaseConfig {
         return instancia;
     }
 
-    /**
-     * Crea y retorna una conexión a la base de datos
-     */
     public Connection obtenerConexion() throws BaseDatosException {
         try {
             return DriverManager.getConnection(url, usuario, password);
         } catch (SQLException e) {
-            throw new BaseDatosException(
-                    "Error al conectar con Supabase: " + e.getMessage(),
-                    e
-            );
+            throw new BaseDatosException("Error al conectar con Supabase: " + e.getMessage(), e);
         }
-    }
+}
+
 
     /**
      * Cierra una conexión de forma segura
